@@ -1,0 +1,21 @@
+[
+  {
+    "name": "default",
+    "type": "postgres",
+    "host": "localhost",
+    "synchronize": true,
+    "logging": false,
+    "port": 5433,
+    "username": "postgres",
+    "database": "notes_app",
+    "password": 12345,
+    "entities": ["dist/entity/**/*.js"],
+    "migrations": ["dist/migration/**/*.js"],
+    "subscribers": ["dist/subscriber/**/*.js"],
+    "cli": {
+      "entitiesDir": "src/entity",
+      "migrationsDir": "src/migration",
+      "subscribersDir": "src/subscriber"
+    }
+  }
+]
