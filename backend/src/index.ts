@@ -45,7 +45,7 @@ async function listen(port: number) {
   app.use(
     cors({
       credentials: true,
-      origin: 'http://localhost:5173',
+      origin: 'http://127.0.0.1:3000',
     })
   );
 
@@ -58,11 +58,6 @@ async function listen(port: number) {
   app.listen(port);
 
   return true;
-  // const httpServer = http.createServer(app);
-
-  // return new Promise((resolve, reject) => {
-  //   httpServer.listen(port).once("listening", resolve).once("error", reject);
-  // });
 }
 
 async function main() {
