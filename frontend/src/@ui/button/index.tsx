@@ -64,8 +64,8 @@ const FormButtonChildrenContainer = styled.span<{ $size: "lg" | "md" | "sm" }>`
     $size === "lg"
       ? theme.font.size.lg
       : $size === "md"
-      ? theme.font.size.md
-      : theme.font.size.sm};
+        ? theme.font.size.md
+        : theme.font.size.sm};
   font-weight: ${({ theme }) => theme.font.weight.bold};
   color: ${({ theme }) => theme.colors.textSec};
   ${StyledFormButton}:hover & {
@@ -81,8 +81,8 @@ const ChildrenContainer = styled.span<{ $size: "lg" | "md" | "sm" }>`
     $size === "lg"
       ? theme.font.size.lg
       : $size === "md"
-      ? theme.font.size.md
-      : theme.font.size.sm};
+        ? theme.font.size.md
+        : theme.font.size.sm};
   font-weight: ${({ theme }) => theme.font.weight.bold};
   color: ${({ theme }) => theme.colors.textSec};
   ${StyledButton}:hover & {
@@ -155,7 +155,6 @@ const StyledIconButton = styled.button`
 
 const IconContainer = styled.div`
   transition: ${({ theme }) => theme.transition};
-  border-radius: ${({ theme }) => theme.borderRadius};
   width: 36px;
   height: 36px;
   padding: 8px;

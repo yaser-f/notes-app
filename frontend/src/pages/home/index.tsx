@@ -1,11 +1,7 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
+import React from "react";
 import styled from "styled-components";
-import {
-  Note,
-  useCurrentUserQuery,
-  useNotesQuery,
-} from "../../gql/generated/graphql";
+import api from '../../data-access';
 import AddNote from "./addNote";
 import Notes from "./notes";
 
@@ -14,30 +10,15 @@ const HeaderContainer = styled.div`
 `;
 
 const HomePage: React.FC = () => {
-  const { data, loading, updateQuery } = useNotesQuery();
-  const navigate = useNavigate();
+  const { data, isLoading, refetch } = useQuery(['notes'], api.getNotes);
 
-  const { data: currentUserQuery } = useCurrentUserQuery();
-
-  useEffect(() => {
-    if (!loading && !currentUserQuery?.currentUser) {
-      // not logged in
-      navigate("/");
-    }
-  }, [data, loading, navigate]);
-
-  const updateCacheWhenNoteAdded = (note: Note) => {
-    updateQuery((prev) => ({
-      notes: [note, ...prev.notes],
-    }));
-  };
 
   return (
     <div>
       <HeaderContainer>
-        <AddNote updateCache={updateCacheWhenNoteAdded} />
-        {loading && <span>loading...</span>}
-        {data && data.notes && <Notes notes={data.notes} />}
+        <AddNote updateCache={() => refetch()} />
+        {isLoading && <span>loading...</span>}
+        {data && <Notes notes={data} />}
       </HeaderContainer>
     </div>
   );

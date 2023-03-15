@@ -1,13 +1,11 @@
+import { useMutation } from '@tanstack/react-query';
 import React, { useRef, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import styled from "styled-components";
 import { useOnClickOutside } from "../../@hooks/useOnClickOutside";
 import { FormButton } from "../../@ui/button";
-import {
-  AddNoteMutationVariables,
-  useAddNoteMutation,
-} from "../../gql/generated/graphql";
 import { breakpoints } from "../../theme/media";
+import api, { AddNoteArgs } from '../../data-access';
 
 const Container = styled.div<{ $focused: boolean }>`
   margin: 0 auto;
@@ -16,7 +14,7 @@ const Container = styled.div<{ $focused: boolean }>`
   margin-bottom: 50px;
   box-shadow: ${({ $focused }) =>
     $focused
-      ? "0 5px 20px 0px rgb(255 255 255 / 30%)"
+      ? "0 0 5px 2px rgb(255 255 255 / 30%)"
       : "0 5px 20px 0px rgb(255 255 255 / 0%)"};
   transition: ${({ theme }) => theme.transition};
   background: ${({ theme, $focused }) =>
@@ -67,29 +65,17 @@ const AddNote: React.FC<{ updateCache: (note: any) => void }> = ({
 
   const [focused, setFocused] = useState(false);
 
-  const { register, handleSubmit, watch, reset } =
-    useForm<AddNoteMutationVariables>();
+  const { register, handleSubmit, watch, reset } = useForm<AddNoteArgs>();
 
-  const [addNote, { loading }] = useAddNoteMutation();
+  const { mutate, isLoading } = useMutation(api.addNote, {
+    onSuccess: (data) => {
+      updateCache(data.addNote);
+      reset();
+      setFocused(false);
+    },
+  });
 
   const { title, body } = watch();
-
-  const onSubmit: SubmitHandler<AddNoteMutationVariables> = async (
-    variables
-  ) => {
-    await addNote({
-      variables,
-    })
-      .then(({ data }) => {
-        if (data?.addNote) {
-          updateCache(data.addNote);
-        }
-      })
-      .catch((err) => console.log(err));
-
-    reset();
-    setFocused(false);
-  };
 
   useOnClickOutside(containerRef, () => {
     if (title.length === 0 && body.length === 0) {
@@ -99,7 +85,7 @@ const AddNote: React.FC<{ updateCache: (note: any) => void }> = ({
 
   return (
     <Container ref={containerRef} $focused={focused}>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(data => mutate(data))}>
         <TitleInput
           style={{
             display: focused ? "block" : "none",
@@ -114,7 +100,7 @@ const AddNote: React.FC<{ updateCache: (note: any) => void }> = ({
           {...register("body")}
         />
         {focused && (
-          <FormButton ignorePadding loading={loading}>
+          <FormButton ignorePadding loading={isLoading}>
             Save
           </FormButton>
         )}

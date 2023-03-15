@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import styled from "styled-components";
-import { Note } from "../../gql/generated/graphql";
+import { Note } from '../../data-access';
 import { breakpoints } from "../../theme/media";
 
 const GridContainer = styled.ul`

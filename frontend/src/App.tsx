@@ -1,12 +1,12 @@
-import React from "react";
-import { Routes, Route, useLocation, Outlet, Link } from "react-router-dom";
-import HomePage from "./pages/home";
-import NotePage from "./pages/note";
-import NoMatch from "./pages/404";
-import styled from "styled-components";
-import LandingPage from "./pages/landing/landing";
-import LoginPage from "./pages/login";
-import SignUpPage from "./pages/signup";
+import { Routes, Route, useLocation, Outlet, Link } from 'react-router-dom';
+import HomePage from './pages/home';
+import NotePage from './pages/note';
+import NoMatch from './pages/404';
+import styled from 'styled-components';
+import LandingPage from './pages/landing/landing';
+import LoginPage from './pages/login';
+import SignUpPage from './pages/signup';
+import { AuthProvider, RequireAuth, RequireNoAuth } from './@hooks/useAuth';
 
 const LayoutContainer = styled.div`
   height: 100%;
@@ -35,7 +35,7 @@ const Layout = () => {
   return (
     <LayoutContainer>
       <HeaderContainer>
-        <LogoContainer to="/">:)</LogoContainer>
+        <LogoContainer to='/'>:)</LogoContainer>
       </HeaderContainer>
       <Outlet />
     </LayoutContainer>
@@ -51,27 +51,84 @@ function App() {
   let state = location.state as { backgroundLocation?: Location };
 
   return (
-    <React.Fragment>
+    <AuthProvider>
       <Routes location={state?.backgroundLocation || location}>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<LandingPage />} />
-          <Route path="login" element={<LoginPage />} />
-          <Route path="signup" element={<SignUpPage />} />
-          <Route path="notes" element={<HomePage />} />
-          <Route path="/note/:id" element={<NotePage />} />
-          <Route path="*" element={<NoMatch />} />
+        <Route path='/' element={<Layout />}>
+          <Route
+            index
+            element={
+              <RequireNoAuth>
+                <LandingPage />
+              </RequireNoAuth>
+            }
+          />
+          <Route
+            path='login'
+            element={
+              <RequireNoAuth>
+                <LoginPage />
+              </RequireNoAuth>
+            }
+          />
+          <Route
+            path='signup'
+            element={
+              <RequireNoAuth>
+                <SignUpPage />
+              </RequireNoAuth>
+            }
+          />
+          {/* require auth */}
+          <Route
+            path='notes'
+            element={
+              <RequireAuth>
+                <HomePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path='/note/:id'
+            element={
+              <RequireAuth>
+                <NotePage />
+              </RequireAuth>
+            }
+          />
+          <Route path='*' element={<NoMatch />} />
         </Route>
       </Routes>
 
       {/* Show the modal when a `backgroundLocation` is set */}
       {state?.backgroundLocation && (
         <Routes>
-          <Route path="login" element={<LoginPage />} />
-          <Route path="signup" element={<SignUpPage />} />
-          <Route path="/note/:id" element={<NotePage />} />
+          <Route
+            path='login'
+            element={
+              <RequireNoAuth>
+                <LoginPage />
+              </RequireNoAuth>
+            }
+          />
+          <Route
+            path='signup'
+            element={
+              <RequireNoAuth>
+                <SignUpPage />
+              </RequireNoAuth>
+            }
+          />
+          <Route
+            path='/note/:id'
+            element={
+              <RequireAuth>
+                <NotePage />
+              </RequireAuth>
+            }
+          />
         </Routes>
       )}
-    </React.Fragment>
+    </AuthProvider>
   );
 }
 

@@ -6,35 +6,26 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { GlobalStyle } from "./theme/global";
 import { myTheme } from "./theme/theme";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import {
-  ApolloClient,
-  InMemoryCache,
-  ApolloProvider,
-  HttpLink,
-} from "@apollo/client";
-
-const httpLink = new HttpLink({
-  uri: "http://localhost:4000/graphql",
-  credentials: "include",
-});
-
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: httpLink,
-});
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 30
+    }
+  }
+})
 
 ReactDOM.render(
   <React.StrictMode>
-    <ApolloProvider client={client}>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <ThemeProvider theme={myTheme}>
           <GlobalStyle />
-
           <App />
         </ThemeProvider>
       </BrowserRouter>
-    </ApolloProvider>
+    </QueryClientProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

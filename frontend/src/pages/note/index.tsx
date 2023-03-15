@@ -1,16 +1,11 @@
+import { useMutation, useQuery } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { IconButton } from "../../@ui/button";
 import Dialog, { DIALOG_TRANSITION_DURATION } from "../../@ui/dialog";
-import {
-  Note,
-  UpdateNoteMutationVariables,
-  useNoteLazyQuery,
-  useRemoveNoreMutation,
-  useUpdateNoteMutation,
-} from "../../gql/generated/graphql";
+import api, { Note, UpdateNoteArgs } from '../../data-access';
 
 const ContentContainer = styled.div`
   /* padding: 10px; */
@@ -58,46 +53,27 @@ const NoteContent = React.forwardRef<
   HTMLButtonElement,
   { note: Note; closeDialog: () => any }
 >(({ note, closeDialog }, ref) => {
-  const [updateNote] = useUpdateNoteMutation();
+  const { mutate: updateNote } = useMutation(api.updateNote);
+  const { mutate: deleteNote } = useMutation(api.deleteNote, {
+    onSuccess: () => closeDialog(),
+    onError: (err) => console.log('err', err),
+  });
 
-  const [removeNote] = useRemoveNoreMutation();
-
-  const { register, handleSubmit } = useForm<UpdateNoteMutationVariables>({
+  const { register, handleSubmit } = useForm<Omit<UpdateNoteArgs, 'id'>>({
     defaultValues: {
-      id: note.id,
       title: note.title,
       body: note.body,
     },
   });
 
-  const onSubmit: SubmitHandler<UpdateNoteMutationVariables> = (v) => {
-    updateNote({
-      variables: v,
-    });
-  };
-
-  const onRemove = () => {
-    removeNote({
-      variables: {
-        id: note.id,
-      },
-    })
-      .then(({ data }) => {
-        if (data?.removeNote) {
-          closeDialog();
-        }
-      })
-      .catch((err) => console.log("err", err));
-  };
-
   return (
     <ContentContainer>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(data => updateNote({ id: note.id, ...data }))}>
         <TitleInput placeholder="Note Title" {...register("title")} />
         <NoteInput placeholder="Note..." rows={10} {...register("body")} />
         <SpaceBetween>
           <button type="submit" ref={ref} hidden={true}></button>
-          <IconButton name="remove" onClick={onRemove} />
+          <IconButton name="remove" onClick={() => deleteNote(note.id)} />
         </SpaceBetween>
       </form>
     </ContentContainer>
@@ -107,23 +83,15 @@ const NoteContent = React.forwardRef<
 const NotePage = () => {
   let navigate = useNavigate();
 
-  let { id } = useParams<"id">();
+  let { id } = useParams<'id'>();
 
   const [openDialog, setOpenDialog] = useState(false);
 
-  const [queryNote, { data, loading }] = useNoteLazyQuery();
+  const { data, isLoading } = useQuery(['note', id], () => api.getNote(id!), {
+    enabled: !!id,
+  });
 
   const submitButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (id) {
-      queryNote({
-        variables: {
-          id,
-        },
-      });
-    }
-  }, [id]);
 
   useEffect(() => {
     setOpenDialog(true);
@@ -139,12 +107,12 @@ const NotePage = () => {
 
   return (
     <Dialog aria-labelledby="label" close={closeDialog} open={openDialog}>
-      {loading && <span>loading...</span>}
-      {data?.note && (
+      {isLoading && <span>loading...</span>}
+      {data && (
         <NoteContent
           ref={submitButtonRef}
           closeDialog={closeDialog}
-          note={data.note}
+          note={data}
         />
       )}
     </Dialog>

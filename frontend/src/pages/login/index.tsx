@@ -1,33 +1,27 @@
+import { useMutation } from '@tanstack/react-query';
 import React, { useEffect, useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../@hooks/useAuth';
 import { FormButton } from "../../@ui/button";
 import Dialog, { DIALOG_TRANSITION_DURATION } from "../../@ui/dialog";
 import { DialogHeader } from "../../@ui/dialog/dialogHeader";
 import { Input } from "../../@ui/input";
-import {
-  LoginMutationVariables,
-  useCurrentUserQuery,
-  useLoginMutation,
-} from "../../gql/generated/graphql";
+import api, { LoginArgs } from '../../data-access';
 
 const LoginPage: React.FC = () => {
   let navigate = useNavigate();
 
   const [openDialog, setOpenDialog] = useState(false);
 
-  const { register, handleSubmit } = useForm<LoginMutationVariables>();
+  const { register, handleSubmit } = useForm<LoginArgs>();
 
-  const [login, { loading }] = useLoginMutation();
+  const { refetch } = useAuth();
 
-  const { data, refetch, loading: loading2 } = useCurrentUserQuery();
-
-  useEffect(() => {
-    if (!loading && data?.currentUser) {
-      // logged in
-      navigate("/notes");
-    }
-  }, [data, loading, navigate]);
+  const { mutate, isLoading } = useMutation(api.login, {
+    onSuccess: () => refetch(),
+    onError: (err) => console.log('something went wrong', err),
+  });
 
   useEffect(() => {
     setOpenDialog(true);
@@ -40,24 +34,11 @@ const LoginPage: React.FC = () => {
     }, DIALOG_TRANSITION_DURATION);
   }
 
-  const onSubmit: SubmitHandler<LoginMutationVariables> = async (variables) => {
-    await login({
-      variables,
-    })
-      .then(({ data }) => {
-        if (data?.login) {
-          refetch();
-        } else {
-          console.log("something went wrong");
-        }
-      })
-      .catch((err) => console.log(err));
-  };
 
   return (
     <Dialog aria-labelledby="label" close={closeDialog} open={openDialog}>
       <DialogHeader close={closeDialog}>login</DialogHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(data => mutate(data))}>
         <Input placeholder="Username" register={register} name="username" />
         <Input
           placeholder="Password"
@@ -65,7 +46,7 @@ const LoginPage: React.FC = () => {
           name="password"
           type="password"
         />
-        <FormButton loading={loading || loading2}>Submit</FormButton>
+        <FormButton loading={isLoading}>Submit</FormButton>
       </form>
     </Dialog>
   );
